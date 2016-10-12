@@ -48,7 +48,7 @@ static void findSquares(const Mat& image, vector<vector<Point> >& squares) {
     squares.clear();
 
 	// NEW PART (mid-line comment slashes added)
-    Mat pyr, timg;//, gray0(image.size(), CV_8U), gray;
+    Mat pyr, timg, gray0(image.size(), CV_8U), gray;
 
     // down-scale and upscale the image to filter out the noise
     pyrDown(image, pyr, Size(image.cols/2, image.rows/2));
@@ -56,16 +56,24 @@ static void findSquares(const Mat& image, vector<vector<Point> >& squares) {
 
 
 	// NEW PART:
-	Mat blurred(timg);
-	medianBlur(timg, blurred, 9);
-	Mat gray0(blurred.size(), CV_8U), gray;
+	//Mat blurred(timg);
+	//medianBlur(timg, blurred, 9);
+	//Mat gray0(blurred.size(), CV_8U), gray;
+	for (int y = 0; y < image.rows; y++) { 
+		for (int x = 0; x < image.cols; x++) { 
+			for (int c = 0; c < 3; c++) {
+      			timg.at<Vec3b>(y,x)[c] = saturate_cast<uchar>( 0.4*( timg.at<Vec3b>(y,x)[c] ));
+             }
+    	}
+    }
+
 
     vector<vector<Point> > contours;
 
     // find squares in every color plane of the image
     for(int c = 0; c < 3; c++) {
         int ch[] = {c, 0};
-        mixChannels(&blurred, 1, &gray0, 1, ch, 1);
+        mixChannels(&timg, 1, &gray0, 1, ch, 1);
 
         // try several threshold levels
         for(int l = 0; l < N; l++) {
@@ -129,9 +137,8 @@ static void drawSquares(Mat& image, const vector<vector<Point> >& squares) {
     for (size_t i = 0; i < squares.size(); i++) {
         const Point* p = &squares[i][0];
         int n = (int)squares[i].size();
-        polylines(image, &p, &n, 1, true, Scalar(0,255,0), 3, CV_AA);
+        polylines(image, &p, &n, 1, true, Scalar(0,0,0), 3, CV_AA);
     }
-
     imshow(wndname, image);
 }
 
@@ -151,8 +158,8 @@ static void makeText(int heatmap[][16]) {
 	myfile.close();
 }
 
-
-void getLargestSquare(const vector<vector<Point> >& squares, vector<Point>& biggest_square) {
+// NEWEST PART (took away const identifier of squares)
+void getLargestSquare(vector<vector<Point> >& squares, vector<Point>& biggest_square) {
     if (!squares.size()) {
         // no squares detected
         return;
@@ -176,8 +183,9 @@ void getLargestSquare(const vector<vector<Point> >& squares, vector<Point>& bigg
             max_square_idx = i;
         }
     }
-
+	// NEWEST PART (second line)
     biggest_square = squares[max_square_idx];
+	squares.erase(squares.begin() + max_square_idx);
 }
 
 
@@ -459,7 +467,8 @@ int main(int /*argc*/, char** /*argv*/) {
 	risk[15][14] = 50 + x;
 	risk[15][15] = 0;
 
-    static const char* names[] = { "blank.png", 0};
+    static const char* names[] = { "bigBlank.png", 0};
+	// "blank.png", 0 };
     // "pic2.png", "pic3.png", "pic4.png", "pic5.png", "pic6.png", 0 };
     help();
     namedWindow( wndname, 1 );
@@ -482,14 +491,37 @@ int main(int /*argc*/, char** /*argv*/) {
 		
 		// NEW PARTS (both lines)
 		vector<Point> largest;
-		getLargestSquare(squares, largest);
+		for (int w = 0; w < 27; w++) {
+			getLargestSquare(squares, largest);
+		}
+	
+		// NEWESTEST PART
+		Rect rectang = boundingRect(Mat(largest));
+		Mat cropped = image(rectang);
+		cout << "x: " << rectang.x << ", y: " << rectang.y << ", width: " << rectang.width << ", height: " << rectang.height << endl;
 		
+		vector<Point> large;
+		findSquares(cropped, squares);
+		for (int u = 0; u < 1; u++) {
+			getLargestSquare(squares, large);
+		}
+		Rect recta = boundingRect(Mat(large));
+		cout << "x: " << recta.x << ", y: " << recta.y << ", width: " << recta.width << ", height: " << recta.height << endl;
+		Rect grid = Rect(recta.x + 10, recta.y + 10, recta.width - 21, recta.height - 20);
+		Mat crop = cropped(grid);
+		
+		findSquares(crop, squares);		
+	
 		// NEW PART (next 2 lines);
-		vector<vector<Point> > helper;
-		helper.push_back(largest);
-		drawSquares(image, helper);
-        // NEW PART
-		// drawSquares(image, squares);
+		//vector<vector<Point> > helper;
+		//helper.push_back(largest);
+		//drawSquares(image, helper);
+
+		for (int u = 0; u < 15; u++) {
+			getLargestSquare(squares, large);
+		}
+		//imshow(wndname, crop);
+		drawSquares(crop, squares);
 
         int c = waitKey();
         if( (char)c == 27 )
