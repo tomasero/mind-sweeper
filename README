@@ -1,0 +1,1 @@
+g++ -ggdb `pkg-config --cflags --libs opencv` heatmap.cpp -o heatmap
