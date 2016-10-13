@@ -29,11 +29,9 @@ static void help() {
 
 
 int thresh = 50, N = 11;
-const char* wndname = "Square Detection Demo";
+const char* wndname = "Heatmap";
 
-// helper function:
-// finds a cosine of angle between vectors
-// from pt0->pt1 and from pt0->pt2
+// Finds a cosine of angle between vectors from pt0->pt1 and from pt0->pt2
 static double angle( Point pt1, Point pt2, Point pt0 ) {
     double dx1 = pt1.x - pt0.x;
     double dy1 = pt1.y - pt0.y;
@@ -42,27 +40,21 @@ static double angle( Point pt1, Point pt2, Point pt0 ) {
     return (dx1*dx2 + dy1*dy2)/sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 + dy2*dy2) + 1e-10);
 }
 
-// returns sequence of squares detected on the image.
-// the sequence is stored in the specified memory storage
+// Returns sequence of squares detected on the image into the squares argument
 static void findSquares(const Mat& image, vector<vector<Point> >& squares) {
     squares.clear();
 
-	// NEW PART (mid-line comment slashes added)
     Mat pyr, timg, gray0(image.size(), CV_8U), gray;
 
-    // down-scale and upscale the image to filter out the noise
+    // Down-scale and upscale the image to filter out the noise
     pyrDown(image, pyr, Size(image.cols/2, image.rows/2));
     pyrUp(pyr, timg, image.size());
 
-
-	// NEW PART:
-	//Mat blurred(timg);
-	//medianBlur(timg, blurred, 9);
-	//Mat gray0(blurred.size(), CV_8U), gray;
+	// Tamper with Contrast and Saturation values
 	for (int y = 0; y < image.rows; y++) { 
 		for (int x = 0; x < image.cols; x++) { 
 			for (int c = 0; c < 3; c++) {
-      			timg.at<Vec3b>(y,x)[c] = saturate_cast<uchar>( 0.4*( timg.at<Vec3b>(y,x)[c] ));
+      			timg.at<Vec3b>(y,x)[c] = saturate_cast<uchar>( 2.4*( timg.at<Vec3b>(y,x)[c] ));
              }
     	}
     }
@@ -70,57 +62,49 @@ static void findSquares(const Mat& image, vector<vector<Point> >& squares) {
 
     vector<vector<Point> > contours;
 
-    // find squares in every color plane of the image
+    // Find squares in every color plane of the image
     for(int c = 0; c < 3; c++) {
         int ch[] = {c, 0};
         mixChannels(&timg, 1, &gray0, 1, ch, 1);
 
-        // try several threshold levels
+        // Try several threshold levels
         for(int l = 0; l < N; l++) {
-            // hack: use Canny instead of zero threshold level.
-            // Canny helps to catch squares with gradient shading
+            
+			// Canny helps to catch squares with gradient shading
             if(l == 0) {
-                // apply Canny. Take the upper threshold from slider
-                // and set the lower to 0 (which forces edges merging)
                 Canny(gray0, gray, 0, thresh, 5);
-                // dilate canny output to remove potential
-                // holes between edge segments
+                // Dilate canny output to remove potential holes between edge segments
                 dilate(gray, gray, Mat(), Point(-1,-1));
             } else {
-                // apply threshold if l!=0:
-                //     tgray(x,y) = gray(x,y) < (l+1)*255/N ? 255 : 0
                 gray = gray0 >= (l+1)*255/N;
             }
 
-            // find contours and store them all as a list
+            // Find contours and store them all as a list
             findContours(gray, contours, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE);
 
             vector<Point> approx;
 
-            // test each contour
+            // Test each contour
             for (size_t i = 0; i < contours.size(); i++) {
-                // approximate contour with accuracy proportional
-                // to the contour perimeter
+
+                // Approximate contour with accuracy proportional to the contour perimeter
                 approxPolyDP(Mat(contours[i]), approx, arcLength(Mat(contours[i]), true)*0.02, true);
 
-                // square contours should have 4 vertices after approximation
+                // Square contours should have 4 vertices after approximation
                 // relatively large area (to filter out noisy contours)
                 // and be convex.
-                // Note: absolute value of an area is used because
-                // area may be positive or negative - in accordance with the
-                // contour orientation
                 if (approx.size() == 4 &&
                     fabs(contourArea(Mat(approx))) > 1000 &&
                     isContourConvex(Mat(approx))) {
                     double maxCosine = 0;
 
                     for (int j = 2; j < 5; j++) {
-                        // find the maximum cosine of the angle between joint edges
+                        // Find the maximum cosine of the angle between joint edges
                         double cosine = fabs(angle(approx[j%4], approx[j-2], approx[j-1]));
                         maxCosine = MAX(maxCosine, cosine);
                     }
 
-                    // if cosines of all angles are small
+                    // If cosines of all angles are small
                     // (all angles are ~90 degree) then write quandrange
                     // vertices to resultant sequence
                     if( maxCosine < 0.3 )
@@ -132,7 +116,7 @@ static void findSquares(const Mat& image, vector<vector<Point> >& squares) {
 }
 
 
-// the function draws all the squares in the image
+// Draws all the squares in the image
 static void drawSquares(Mat& image, const vector<vector<Point> >& squares) {
     for (size_t i = 0; i < squares.size(); i++) {
         const Point* p = &squares[i][0];
@@ -158,10 +142,8 @@ static void makeText(int heatmap[][16]) {
 	myfile.close();
 }
 
-// NEWEST PART (took away const identifier of squares)
 void getLargestSquare(vector<vector<Point> >& squares, vector<Point>& biggest_square) {
     if (!squares.size()) {
-        // no squares detected
         return;
     }
 
@@ -174,8 +156,6 @@ void getLargestSquare(vector<vector<Point> >& squares, vector<Point>& biggest_sq
         // Convert a set of 4 unordered Points into a meaningful cv::Rect structure.
         Rect rectangle = boundingRect(Mat(squares[i]));
 
-    //  cout << "find_largest_square: #" << i << " rectangle x:" << rectangle.x << " y:" << rectangle.y << " " << rectangle.width << "x" << rectangle.height << endl;
-
         // Store the index position of the biggest square found
         if ((rectangle.width >= max_width) && (rectangle.height >= max_height)) {
             max_width = rectangle.width;
@@ -183,8 +163,8 @@ void getLargestSquare(vector<vector<Point> >& squares, vector<Point>& biggest_sq
             max_square_idx = i;
         }
     }
-	// NEWEST PART (second line)
     biggest_square = squares[max_square_idx];
+	// Remove the largest square from the list of squares
 	squares.erase(squares.begin() + max_square_idx);
 }
 
@@ -469,7 +449,6 @@ int main(int /*argc*/, char** /*argv*/) {
 
     static const char* names[] = { "bigBlank.png", 0};
 	// "blank.png", 0 };
-    // "pic2.png", "pic3.png", "pic4.png", "pic5.png", "pic6.png", 0 };
     help();
     namedWindow( wndname, 1 );
     vector<vector<Point> > squares;
@@ -481,51 +460,51 @@ int main(int /*argc*/, char** /*argv*/) {
             continue;
         }
 
-		Mat img;
-    	findSquares(image, squares);
-		//Rect rectang;
-		//for (size_t i = 0; i < squares.size(); i++) {
-    	//	rectang = boundingRect(Mat(squares[i]));
-		//	imshow(wndname, rectang);
-		//}
-		
-		// NEW PARTS (both lines)
-		vector<Point> largest;
-		for (int w = 0; w < 27; w++) {
-			getLargestSquare(squares, largest);
-		}
-	
-		// NEWESTEST PART
-		Rect rectang = boundingRect(Mat(largest));
-		Mat cropped = image(rectang);
-		cout << "x: " << rectang.x << ", y: " << rectang.y << ", width: " << rectang.width << ", height: " << rectang.height << endl;
-		
-		vector<Point> large;
-		findSquares(cropped, squares);
-		for (int u = 0; u < 1; u++) {
-			getLargestSquare(squares, large);
-		}
-		Rect recta = boundingRect(Mat(large));
-		cout << "x: " << recta.x << ", y: " << recta.y << ", width: " << recta.width << ", height: " << recta.height << endl;
-		Rect grid = Rect(recta.x + 10, recta.y + 10, recta.width - 21, recta.height - 20);
-		Mat crop = cropped(grid);
-		
-		findSquares(crop, squares);		
-	
-		// NEW PART (next 2 lines);
+		// SQUARE FINDING CODE! 
+		//vector<Point> largest;
+		//findSquares(image, squares);
+		//getLargestSquare(squares, largest);
+		//Rect recta = boundingRect(Mat(largest));
+		//cout << "x: " << recta.x << ", y: " << recta.y << endl;
+		//cout << "width: " << recta.width << ", height: " << recta.height << endl;
 		//vector<vector<Point> > helper;
 		//helper.push_back(largest);
 		//drawSquares(image, helper);
 
-		for (int u = 0; u < 15; u++) {
-			getLargestSquare(squares, large);
+		Rect rectang = Rect(795, 333, 961, 961);
+		Mat crop = image(rectang);
+		int tileW = 60;
+		int tileH = 60;
+		
+		// Drawing the Grid
+		//for (int h = 0; h < 16; h++) {
+		//	for (int w = 0; w < 16; w++) {
+		//	Point start = Point(w*tileW, h*tileH);
+		//	Point end = Point((w+1)*tileW, (h+1)*tileH);
+		//	rectangle(crop, start, end, Scalar(234, 234, 0), 1, 8);
+		//	}
+		//}
+		
+		// Detect each Minesweeper tile as an ROI
+		for (int w = 0; w < 16; w++) {
+			for (int h = 0; h < 16; h++) {
+				Rect roi(w*tileW, h*tileH, tileW, tileH);	
+				Mat cropped = crop(roi);
+				string s = to_string(w) + to_string(h);
+				imshow(s, cropped);
+				int c = waitKey();
+				if ( (char)c == 27) {
+					continue;
+				}
+			}
 		}
-		//imshow(wndname, crop);
-		drawSquares(crop, squares);
+		
+		//Mat cropped = crop(roi);
+		//imshow(wndname, cropped);
 
-        int c = waitKey();
-        if( (char)c == 27 )
-            break;
+        //int c = waitKey();
+        //if( (char)c == 27 )
+        //   break;
     }
 
 	makeText(risk);
