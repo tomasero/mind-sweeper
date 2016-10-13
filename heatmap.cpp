@@ -10,122 +10,119 @@
 #include <math.h>
 #include <string.h>
 #include <fstream>
+#include <stdio.h>
 
 using namespace cv;
 using namespace std;
 
+// Image matrices for the pattern matching templates
+Mat four, three, two, one, clicked, unclicked;
 
-static void help() {
-    cout <<
-    "\nA program using pyramid scaling, Canny, contours, contour simpification and\n"
-    "memory storage (it's got it all folks) to find\n"
-    "squares in a list of images pic1-6.png\n"
-    "Returns sequence of squares detected on the image.\n"
-    "the sequence is stored in the specified memory storage\n"
-    "Call:\n"
-    "./squares\n"
-    "Using OpenCV version %s\n" << CV_VERSION << "\n" << endl;
-}
+// Image matrices for helper images while template matching
+Mat r1, r2, r3, r4, rClick, rUnclick;
 
+// Image matrix for the cropped grid from the image
+Mat cropped;
 
-int thresh = 50, N = 11;
+int ret_ind;
+int matchMethod;
+int maxTrackbar = 5;
 const char* wndname = "Heatmap";
 
-// Finds a cosine of angle between vectors from pt0->pt1 and from pt0->pt2
-static double angle( Point pt1, Point pt2, Point pt0 ) {
-    double dx1 = pt1.x - pt0.x;
-    double dy1 = pt1.y - pt0.y;
-    double dx2 = pt2.x - pt0.x;
-    double dy2 = pt2.y - pt0.y;
-    return (dx1*dx2 + dy1*dy2)/sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 + dy2*dy2) + 1e-10);
+/**
+ * @function MatchingMethod
+ * @brief Trackbar callback
+ */
+void MatchingMethod(int, void*) {
+	Mat img_display;
+	cropped.copyTo( img_display );
+
+	/// Create the resulting matrices
+	int result_cols_four =  -cropped.cols + four.cols + 1;
+	int result_rows_four = -cropped.rows + four.rows + 1;
+	int result_cols_three =  -cropped.cols + three.cols + 1;
+	int result_rows_three = -cropped.rows + three.rows + 1;
+	int result_cols_two =  -cropped.cols + two.cols + 1;
+	int result_rows_two = -cropped.rows + two.rows + 1;
+	int result_cols_one =  -cropped.cols + one.cols + 1;
+	int result_rows_one = -cropped.rows + one.rows + 1;
+	int result_cols_clicked =  -cropped.cols + clicked.cols + 1;
+	int result_rows_clicked = -cropped.rows + clicked.rows + 1;
+	int result_cols_unclicked =  -cropped.cols + unclicked.cols + 1;
+	int result_rows_unclicked = -cropped.rows + unclicked.rows + 1;
+
+ 	r4.create( result_rows_four, result_cols_four, CV_32FC1 );
+ 	r3.create( result_rows_three, result_cols_three, CV_32FC1 );
+ 	r2.create( result_rows_two, result_cols_two, CV_32FC1 );
+ 	r1.create( result_rows_one, result_cols_one, CV_32FC1 );
+ 	rClick.create( result_rows_clicked, result_cols_clicked, CV_32FC1 );
+ 	rUnclick.create( result_rows_unclicked, result_cols_unclicked, CV_32FC1 );
+
+	/// Do the Matching and Normalize
+  	matchTemplate( cropped, four, r4, matchMethod);
+  	matchTemplate( cropped, three, r3, matchMethod); 
+	matchTemplate( cropped, two, r2, matchMethod); 
+	matchTemplate( cropped, one, r1, matchMethod); 
+	matchTemplate( cropped, clicked, rClick, matchMethod); 
+	matchTemplate( cropped, unclicked, rUnclick, matchMethod); 
+
+  	/// Localizing the best match with minMaxLoc
+  	double minVal4; double maxVal4; Point minLoc4; Point maxLoc4;
+  	double minVal3; double maxVal3; Point minLoc3; Point maxLoc3;
+	double minVal2; double maxVal2; Point minLoc2; Point maxLoc2;
+	double minVal1; double maxVal1; Point minLoc1; Point maxLoc1;
+	double minValC; double maxValC; Point minLocC; Point maxLocC;
+	double minValU; double maxValU; Point minLocU; Point maxLocU;
+
+	// minVal* and maxVal* doubles are populate with similarity values
+  	minMaxLoc( r4, &minVal4, &maxVal4, &minLoc4, &maxLoc4, Mat() );
+    minMaxLoc( r3, &minVal3, &maxVal3, &minLoc3, &maxLoc3, Mat() ); 
+    minMaxLoc( r2, &minVal2, &maxVal2, &minLoc2, &maxLoc2, Mat() ); 
+    minMaxLoc( r1, &minVal1, &maxVal1, &minLoc1, &maxLoc1, Mat() ); 
+    minMaxLoc( rClick, &minValC, &maxValC, &minLocC, &maxLocC, Mat() ); 
+    minMaxLoc( rUnclick, &minValU, &maxValU, &minLocU, &maxLocU, Mat() ); 
+
+	int ret_val;
+	ret_ind = 0;
+  	if (matchMethod  == CV_TM_SQDIFF || matchMethod == CV_TM_SQDIFF_NORMED) { 
+		// Lowest value is best fit
+		double minVals[6];
+		ret_val = minValC;
+		minVals[0] = minValC;
+		minVals[1] = minVal1;
+		minVals[2] = minVal2;
+		minVals[3] = minVal3;
+		minVals[4] = minVal4;
+		minVals[5] = minValU;
+		
+		for (int d = 0; d < 6; d++) {
+			if (ret_val > minVals[d]) {
+				ret_val = minVals[d];
+				ret_ind = d;
+			}
+		}
+	} else {
+		// Highest value is best fit
+		double maxVals[6];
+		ret_val = maxValC;
+		maxVals[0] = maxValC;
+		maxVals[1] = maxVal1;
+		maxVals[2] = maxVal2;
+		maxVals[3] = maxVal3;
+		maxVals[4] = maxVal4;
+		maxVals[5] = maxValU;
+		
+		for (int d = 0; d < 6; d++) {
+			if (ret_val < maxVals[d]) {
+				ret_val = maxVals[d];
+				ret_ind = d;
+			}
+		}
+	}
+	return;
 }
 
-// Returns sequence of squares detected on the image into the squares argument
-static void findSquares(const Mat& image, vector<vector<Point> >& squares) {
-    squares.clear();
-
-    Mat pyr, timg, gray0(image.size(), CV_8U), gray;
-
-    // Down-scale and upscale the image to filter out the noise
-    pyrDown(image, pyr, Size(image.cols/2, image.rows/2));
-    pyrUp(pyr, timg, image.size());
-
-	// Tamper with Contrast and Saturation values
-	for (int y = 0; y < image.rows; y++) { 
-		for (int x = 0; x < image.cols; x++) { 
-			for (int c = 0; c < 3; c++) {
-      			timg.at<Vec3b>(y,x)[c] = saturate_cast<uchar>( 2.4*( timg.at<Vec3b>(y,x)[c] ));
-             }
-    	}
-    }
-
-
-    vector<vector<Point> > contours;
-
-    // Find squares in every color plane of the image
-    for(int c = 0; c < 3; c++) {
-        int ch[] = {c, 0};
-        mixChannels(&timg, 1, &gray0, 1, ch, 1);
-
-        // Try several threshold levels
-        for(int l = 0; l < N; l++) {
-            
-			// Canny helps to catch squares with gradient shading
-            if(l == 0) {
-                Canny(gray0, gray, 0, thresh, 5);
-                // Dilate canny output to remove potential holes between edge segments
-                dilate(gray, gray, Mat(), Point(-1,-1));
-            } else {
-                gray = gray0 >= (l+1)*255/N;
-            }
-
-            // Find contours and store them all as a list
-            findContours(gray, contours, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE);
-
-            vector<Point> approx;
-
-            // Test each contour
-            for (size_t i = 0; i < contours.size(); i++) {
-
-                // Approximate contour with accuracy proportional to the contour perimeter
-                approxPolyDP(Mat(contours[i]), approx, arcLength(Mat(contours[i]), true)*0.02, true);
-
-                // Square contours should have 4 vertices after approximation
-                // relatively large area (to filter out noisy contours)
-                // and be convex.
-                if (approx.size() == 4 &&
-                    fabs(contourArea(Mat(approx))) > 1000 &&
-                    isContourConvex(Mat(approx))) {
-                    double maxCosine = 0;
-
-                    for (int j = 2; j < 5; j++) {
-                        // Find the maximum cosine of the angle between joint edges
-                        double cosine = fabs(angle(approx[j%4], approx[j-2], approx[j-1]));
-                        maxCosine = MAX(maxCosine, cosine);
-                    }
-
-                    // If cosines of all angles are small
-                    // (all angles are ~90 degree) then write quandrange
-                    // vertices to resultant sequence
-                    if( maxCosine < 0.3 )
-                        squares.push_back(approx);
-                }
-            }
-        }
-    }
-}
-
-
-// Draws all the squares in the image
-static void drawSquares(Mat& image, const vector<vector<Point> >& squares) {
-    for (size_t i = 0; i < squares.size(); i++) {
-        const Point* p = &squares[i][0];
-        int n = (int)squares[i].size();
-        polylines(image, &p, &n, 1, true, Scalar(0,0,0), 3, CV_AA);
-    }
-    imshow(wndname, image);
-}
-
+// Takes an array as input and writes to a file in the current directory
 static void makeText(int heatmap[][16]) {
 	int k, l;
 	ofstream myfile;
@@ -141,33 +138,6 @@ static void makeText(int heatmap[][16]) {
 
 	myfile.close();
 }
-
-void getLargestSquare(vector<vector<Point> >& squares, vector<Point>& biggest_square) {
-    if (!squares.size()) {
-        return;
-    }
-
-    int max_width = 0;
-    int max_height = 0;
-    int max_square_idx = 0;
-    const int n_points = 4;
-
-    for (size_t i = 0; i < squares.size(); i++) {
-        // Convert a set of 4 unordered Points into a meaningful cv::Rect structure.
-        Rect rectangle = boundingRect(Mat(squares[i]));
-
-        // Store the index position of the biggest square found
-        if ((rectangle.width >= max_width) && (rectangle.height >= max_height)) {
-            max_width = rectangle.width;
-            max_height = rectangle.height;
-            max_square_idx = i;
-        }
-    }
-    biggest_square = squares[max_square_idx];
-	// Remove the largest square from the list of squares
-	squares.erase(squares.begin() + max_square_idx);
-}
-
 
 int main(int /*argc*/, char** /*argv*/) {
 	// Hardcoded Example
@@ -449,27 +419,27 @@ int main(int /*argc*/, char** /*argv*/) {
 
     static const char* names[] = { "bigBlank.png", 0};
 	// "blank.png", 0 };
-    help();
     namedWindow( wndname, 1 );
     vector<vector<Point> > squares;
 
+	four = imread( "four.png", 1);
+	three = imread( "three.png", 1);
+	two = imread( "two.png", 1);
+	one = imread( "one.png", 1);
+	clicked = imread( "clicked.png", 1);
+	unclicked = imread( "unclicked.png", 1);
+
+	namedWindow( "Helper", CV_WINDOW_AUTOSIZE );
+	char* trackbar_label = "Method: \n 0: SQDIFF \n 1: SQDIFF NORMED \n 2: TM CCORR \n 3: TM CCORR NORMED \n 4: TM COEFF \n 5: TM COEFF NORMED";
+  	createTrackbar(trackbar_label, "Helper", &matchMethod, maxTrackbar, MatchingMethod);
+
+	
     for (int i = 0; names[i] != 0; i++) {
         Mat image = imread(names[i], 1);
         if (image.empty()) {
             cout << "Couldn't load " << names[i] << endl;
             continue;
         }
-
-		// SQUARE FINDING CODE! 
-		//vector<Point> largest;
-		//findSquares(image, squares);
-		//getLargestSquare(squares, largest);
-		//Rect recta = boundingRect(Mat(largest));
-		//cout << "x: " << recta.x << ", y: " << recta.y << endl;
-		//cout << "width: " << recta.width << ", height: " << recta.height << endl;
-		//vector<vector<Point> > helper;
-		//helper.push_back(largest);
-		//drawSquares(image, helper);
 
 		Rect rectang = Rect(795, 333, 961, 961);
 		Mat crop = image(rectang);
@@ -489,9 +459,17 @@ int main(int /*argc*/, char** /*argv*/) {
 		for (int w = 0; w < 16; w++) {
 			for (int h = 0; h < 16; h++) {
 				Rect roi(w*tileW, h*tileH, tileW, tileH);	
-				Mat cropped = crop(roi);
+				cropped = crop(roi);
 				string s = to_string(w) + to_string(h);
 				imshow(s, cropped);
+				MatchingMethod( 0, 0 );
+				if (ret_ind == 0) {
+					cout << "Tile is: Clicked" << endl;
+				} else if (ret_ind == 5) {
+					cout << "Tile is: Unclicked" << endl;
+				} else {
+					cout << "Tile is: " << ret_ind << endl;
+				}
 				int c = waitKey();
 				if ( (char)c == 27) {
 					continue;
