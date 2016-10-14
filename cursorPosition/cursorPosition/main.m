@@ -210,16 +210,26 @@
 }
 
 - (void) readFile {
-    NSString *filepath = [[NSBundle mainBundle] pathForResource:@"hardcode" ofType:@"txt"];
-    NSError *error;
-    NSString *fileContents = [NSString stringWithContentsOfFile:filepath encoding:NSUTF8StringEncoding error:&error];
+//    NSString *filepath = [[NSBundle mainBundle] pathForResource:@"hardcode" ofType:@"txt"];
+//    NSError *error;
+//    NSString *fileContents = [NSString stringWithContentsOfFile:filepath encoding:NSUTF8StringEncoding error:&error];
+
+    NSFileManager *filemgr;
+    NSData *databuffer;
     
-    if (error)
-        NSLog(@"Error reading file: %@", error.localizedDescription);
+    filemgr = [NSFileManager defaultManager];
+    
+    databuffer = [filemgr contentsAtPath: @"hardcode.txt"];
+    
+//    if (error)
+//        NSLog(@"Error reading file: %@", error.localizedDescription);
     
     // maybe for debugging...
 //    NSLog(@"contents: %@", fileContents);
     
+//    NSArray *listArray = [fileContents componentsSeparatedByString:@"\n"];
+    NSString* fileContents = [NSString stringWithUTF8String:[databuffer bytes]];
+    NSLog(@"%@", fileContents);
     NSArray *listArray = [fileContents componentsSeparatedByString:@"\n"];
     
     for (int i = 0; i < 16; i++) {
