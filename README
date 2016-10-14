@@ -1,0 +1,6 @@
+Compilation Command:
+g++ -ggdb `pkg-config --cflags --libs opencv` heatmap.cpp -o heatmap
+
+
+JXA Terminal Command for Screenshots:
+osascript -l JavaScript -e 'Application("System Events").keystroke("#", {using: "command down"})' 
