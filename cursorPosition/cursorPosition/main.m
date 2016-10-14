@@ -133,7 +133,7 @@
     int x = [cell[@"X"] intValue];
     int y = [cell[@"Y"] intValue];
     int danger = heatMap[x][y];
-//    NSLog(@"danger: %d", danger);
+    NSLog(@"danger: %d", danger);
     return danger;
 }
 
@@ -209,35 +209,69 @@
     }
 }
 
-- (void) readFile {
-//    NSString *filepath = [[NSBundle mainBundle] pathForResource:@"hardcode" ofType:@"txt"];
-//    NSError *error;
-//    NSString *fileContents = [NSString stringWithContentsOfFile:filepath encoding:NSUTF8StringEncoding error:&error];
-
-    NSFileManager *filemgr;
-    NSData *databuffer;
-    
-    filemgr = [NSFileManager defaultManager];
-    
-    databuffer = [filemgr contentsAtPath: @"hardcode.txt"];
-    
-//    if (error)
-//        NSLog(@"Error reading file: %@", error.localizedDescription);
-    
-    // maybe for debugging...
-//    NSLog(@"contents: %@", fileContents);
-    
+//- (void) readFile {
+////    NSString *filepath = [[NSBundle mainBundle] pathForResource:@"hardcode" ofType:@"txt"];
+////    NSError *error;
+////    NSString *fileContents = [NSString stringWithContentsOfFile:filepath encoding:NSUTF8StringEncoding error:&error];
+//
+//    NSFileManager *filemgr;
+//    NSData *databuffer;
+//    
+//    filemgr = [NSFileManager defaultManager];
+//    
+//    databuffer = [filemgr contentsAtPath: @"hardcode.txt"];
+//    
+////    if (error)
+////        NSLog(@"Error reading file: %@", error.localizedDescription);
+//    
+//    // maybe for debugging...
+////    NSLog(@"contents: %@", fileContents);
+//    
+////    NSArray *listArray = [fileContents componentsSeparatedByString:@"\n"];
+//    NSString* fileContents = [NSString stringWithUTF8String:[databuffer bytes]];
+//    NSLog(@"%@", fileContents);
 //    NSArray *listArray = [fileContents componentsSeparatedByString:@"\n"];
-    NSString* fileContents = [NSString stringWithUTF8String:[databuffer bytes]];
-    NSLog(@"%@", fileContents);
-    NSArray *listArray = [fileContents componentsSeparatedByString:@"\n"];
+//    
+//    for (int i = 0; i < 16; i++) {
+//        for (int j = 0; j < 16; j++) {
+//            int idx = 16 * i + j;
+//            heatMap[j][i] = [(NSNumber *)[listArray objectAtIndex:idx] intValue];
+//        }
+//    }
+//}
+
+- (void) readFile {
+    FILE *fp;
+    long lSize;
+    char *buffer;
     
+    fp = fopen ( "/Users/cortensinger/Research/mindSweeper/cursorPosition/hardcode.txt" , "rb" );
+    if( !fp ) perror("/Users/cortensinger/Research/mindSweeper/cursorPosition/hardcode.txt"),exit(1);
+    
+    fseek( fp , 0L , SEEK_END);
+    lSize = ftell( fp );
+    rewind( fp );
+    
+    /* allocate memory for entire content */
+    buffer = calloc( 1, lSize+1 );
+    if( !buffer ) fclose(fp),fputs("memory alloc fails",stderr),exit(1);
+    
+    /* copy the file into the buffer */
+    if( 1!=fread( buffer , lSize, 1 , fp) )
+        fclose(fp),free(buffer),fputs("entire read fails",stderr),exit(1);
+    
+    NSString *fileContents = [NSString stringWithCString:buffer encoding:NSASCIIStringEncoding];
+//    NSLog(@"%@", fileContents);
+    NSArray *listArray = [fileContents componentsSeparatedByString:@"\n"];
+
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 16; j++) {
             int idx = 16 * i + j;
             heatMap[j][i] = [(NSNumber *)[listArray objectAtIndex:idx] intValue];
         }
     }
+    fclose(fp);
+    free(buffer);
 }
 
 @end
@@ -246,6 +280,7 @@
 int main() {
     @autoreleasepool {
         Positions *posObj = [[Positions alloc] init];
+//        [posObj readFile];
         serialFileDescriptor = -1;
         [posObj openSerial];
         [[NSRunLoop currentRunLoop] run];
