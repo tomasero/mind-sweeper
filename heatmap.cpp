@@ -11,6 +11,8 @@
 #include <string.h>
 #include <fstream>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 using namespace cv;
 using namespace std;
@@ -139,28 +141,28 @@ static void calculateRisk(double game[][16]) {
 		risk[0][0] = 0;
 	} else {
 		risk[0][0] = game[1][0] + game[0][1] + game[1][1];
-		risk[0][0] = (risk[0][0]/12)*50 + 50;
+		risk[0][0] = (risk[0][0]/12)*70 + 30;
 		risk[0][0] = round(risk[0][0]);
 	}
 	if (game[0][15] != 0) {
 		risk[0][15] = 0;
 	} else {
 		risk[0][15] = game[1][15] + game[0][14] + game[1][14];
-		risk[0][15] = (risk[0][15]/12)*50 + 50;
+		risk[0][15] = (risk[0][15]/12)*70 + 30;
 		risk[0][15] = round(risk[0][15]);
 	}
 	if (game[15][0] != 0) {
 		risk[15][0] = 0;
 	} else {
 		risk[15][0] = game[15][1] + game[14][0] + game[14][1];
-		risk[15][0] = (risk[15][0]/12)*50 + 50;
+		risk[15][0] = (risk[15][0]/12)*70 + 30;
 		risk[15][0] = round(risk[15][0]);  
 	}
 	if (game[15][15] != 0) {
 		risk[15][15] = 0;
 	} else {
 		risk[15][15] = game[15][14] + game[14][15] + game[14][14];
-		risk[15][15] = (risk[15][15]/12)*50 + 50;
+		risk[15][15] = (risk[15][15]/12)*70 + 30;
 		risk[15][15] = round(risk[15][15]); 
 	}
 	
@@ -170,7 +172,7 @@ static void calculateRisk(double game[][16]) {
 			risk[y][0] = 0;
 		} else {
 			risk[y][0] = game[y-1][0] + game[y-1][1] + game[y][1] + game[y+1][1] + game[y+1][0];
-			risk[y][0] = (risk[y][0]/20)*50 + 50;
+			risk[y][0] = (risk[y][0]/20)*70 + 30;
 			risk[y][0] = round(risk[y][0]); 
 		}
 	}
@@ -180,7 +182,7 @@ static void calculateRisk(double game[][16]) {
 			risk[y][15] = 0;
 		} else {
 			risk[y][15] = game[y-1][15] + game[y-1][14] + game[y][14] + game[y+1][14] + game[y+1][15];
-			risk[y][15] = (risk[y][15]/20)*50 + 50;
+			risk[y][15] = (risk[y][15]/20)*70 + 30;
 			risk[y][15] = round(risk[y][15]); 
 		}
 	}
@@ -190,7 +192,7 @@ static void calculateRisk(double game[][16]) {
 			risk[0][x] = 0;
 		} else {
 			risk[0][x] = game[0][x-1] + game[1][x-1] + game[1][x] + game[1][x+1] + game[0][x+1];
-			risk[0][x] = (risk[0][x]/20)*50 + 50;
+			risk[0][x] = (risk[0][x]/20)*70 + 30;
 			risk[0][x] = round(risk[0][x]); 
 		}
 	}
@@ -200,7 +202,7 @@ static void calculateRisk(double game[][16]) {
 			risk[15][x] = 0;
 		} else {
 			risk[15][x] = game[15][x-1] + game[14][x-1] + game[14][x] + game[14][x+1] + game[15][x+1];
-			risk[15][x] = (risk[15][x]/20)*50 + 50;
+			risk[15][x] = (risk[15][x]/20)*70 + 30;
 			risk[15][x] = round(risk[15][x]); 
 		}
 	}
@@ -214,7 +216,7 @@ static void calculateRisk(double game[][16]) {
 				risk[y][x] = game[y-1][x-1] + game[y-1][x] + game[y-1][x+1];
 				risk[y][x] += game[y+1][x-1] + game[y+1][x] + game[y+1][x+1];
 				risk[y][x] += game[y][x-1] + game[y][x+1];
-				risk[y][x] = (risk[y][x]/32)*50 + 50;
+				risk[y][x] = (risk[y][x]/32)*70 + 30;
 				risk[y][x] = round(risk[y][x]); 
 			}
 		}
@@ -260,7 +262,6 @@ static void onMouse(int event, int x, int y, int, void*) {
 }
 
 int main(int /*argc*/, char** /*argv*/) {
-    static const char* names[] = { "grid.png", 0};
     vector<vector<Point> > squares;
 	double grid[16][16];
 	
@@ -272,17 +273,28 @@ int main(int /*argc*/, char** /*argv*/) {
 	unclicked = imread( "unclicked.png", 1);
 	rightclick = imread( "rightclick.png", 1);
 	
-	imshow("help", Mat(four));
-	setMouseCallback( "help", onMouse, 0);
+	// OPENCV Mouse Click detection (only on image window from OPENCV)
+	//imshow("help", Mat(four));
+	//setMouseCallback( "help", onMouse, 0);
 
-	while(click == 0) {
-		click = 1;
+	int d = 1;
+
+	while(d) {
+		// Code for actually detecting mouse clicks
+		//while(click == 0) {}
+		//click = 1;
 		//if (!click) {
 		//	continue;
 		//} else {
 		//	click = 0;
 		//	cout << "CLICK" << endl;
-		//}	
+		//}
+
+		// Take a screenshot and move it into the current directory
+		system("osascript -l JavaScript -e 'Application(\"System Events\").keystroke(\"#\", {using: \"command down\"})'");
+		usleep(500000);
+		system("mv ~/Desktop/screenshots/grid.png ~/Downloads/opencv-2.4.13/samples/cpp/");
+		usleep(1000000);
 		Mat image = imread("grid.png", 1);	
 
 		Rect rectang = Rect(795, 333, 961, 961);
