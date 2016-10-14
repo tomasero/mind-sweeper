@@ -7,22 +7,26 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FFA7297E1DAE0B9B0064451B /* hardcode.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = FFA7297D1DAE0A0F0064451B /* hardcode.txt */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		FFEE3B221DA64C7F00DC81D8 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = FFEE3B211DA64C7F00DC81D8 /* main.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		FFEE3B1C1DA64C7F00DC81D8 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
+			buildActionMask = 12;
+			dstPath = "";
+			dstSubfolderSpec = 7;
 			files = (
+				FFA7297E1DAE0B9B0064451B /* hardcode.txt in CopyFiles */,
 			);
-			runOnlyForDeploymentPostprocessing = 1;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		FFA7297D1DAE0A0F0064451B /* hardcode.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = hardcode.txt; sourceTree = SOURCE_ROOT; };
+		FFE63C851DAC32E300D53D2E /* main.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = main.h; sourceTree = "<group>"; };
 		FFEE3B1E1DA64C7F00DC81D8 /* cursorPosition */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cursorPosition; sourceTree = BUILT_PRODUCTS_DIR; };
 		FFEE3B211DA64C7F00DC81D8 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -41,6 +45,7 @@
 		FFEE3B151DA64C7F00DC81D8 = {
 			isa = PBXGroup;
 			children = (
+				FFA7297D1DAE0A0F0064451B /* hardcode.txt */,
 				FFEE3B201DA64C7F00DC81D8 /* cursorPosition */,
 				FFEE3B1F1DA64C7F00DC81D8 /* Products */,
 			);
@@ -58,6 +63,7 @@
 			isa = PBXGroup;
 			children = (
 				FFEE3B211DA64C7F00DC81D8 /* main.m */,
+				FFE63C851DAC32E300D53D2E /* main.h */,
 			);
 			path = cursorPosition;
 			sourceTree = "<group>";
@@ -237,6 +243,7 @@
 				FFEE3B271DA64C7F00DC81D8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
