@@ -105,7 +105,7 @@
     int cellX = cursorX / 30;
     int cellY = cursorY / 30;
     
-    NSLog(@"(%d, %d)", cellX, cellY);
+//    NSLog(@"(%d, %d)", cellX, cellY);
     NSDictionary *cell = @{
         @"X": [NSNumber numberWithInt: cellX],
         @"Y": [NSNumber numberWithInt: cellY]
@@ -133,7 +133,7 @@
     int x = [cell[@"X"] intValue];
     int y = [cell[@"Y"] intValue];
     int danger = heatMap[x][y];
-    NSLog(@"danger: %d", danger);
+//    NSLog(@"danger: %d", danger);
     return danger;
 }
 
@@ -159,8 +159,8 @@
     [self readFile];
     NSDictionary *windowPos = [self getWindowPosition];
     NSDictionary *cursorPos = [self getCursorPosition];
-    NSLog(@"%@", windowPos);
-    NSLog(@"%@", cursorPos);
+//    NSLog(@"%@", windowPos);
+//    NSLog(@"%@", cursorPos);
     if (windowPos) {
         [self printRelPos:windowPos cursor:cursorPos];
     } else {
@@ -204,7 +204,7 @@
         for (int j = 0; j < 16; j++) {
             int val = 16 * i + j;
             heatMap[j][i] = val < 255 ?  val : 254;
-            NSLog(@"%d", heatMap[j][i]);
+//            NSLog(@"%d", heatMap[j][i]);
         }
     }
 }
