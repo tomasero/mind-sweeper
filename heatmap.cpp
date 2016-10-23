@@ -133,36 +133,358 @@ void MatchingMethod(int, void*) {
 	return;
 }
 
+
+
 // Processes the current gamestate grid[][] and determines risk[][] probabilities
 static void calculateRisk(double game[][16]) {
+	int x, y;
+	double count = 0;
+	// Corner Cases
+	if ((game[0][0] > 0) && (game[0][0] < 5)) {
+		if (game[0][1] == 0) {
+			count += 1;
+		}
+		if (game[1][0] == 0) {
+			count += 1;
+		}
+		if (game[1][1] == 0) {
+			count += 1;
+		}
+		count = game[0][0]*100/count;
+		if (game[0][1] == 0) {
+			risk[0][1] += round(count);
+		}
+		if (game[1][0] == 0) {
+			risk[1][0] += round(count);
+		}
+		if (game[1][1] == 0) {
+			risk[1][1] += round(count);
+		}
+		count = 0;
+	}
+	if ((game[15][0] > 0) && (game[15][0] < 5)) {
+		if (game[15][1] == 0) {
+			count += 1;
+		}
+		if (game[14][0] == 0) {
+			count += 1;
+		}
+		if (game[14][1] == 0) {
+			count += 1;
+		}
+		count = game[15][0]*100/count;
+		if (game[15][1] == 0) {
+			risk[15][1] += round(count);
+		}
+		if (game[14][0] == 0) {
+			risk[14][0] += round(count);
+		}
+		if (game[14][1] == 0) {
+			risk[14][1] += round(count);
+		}
+		count = 0;
+	}
+	if ((game[0][15] > 0) && (game[0][15] < 5)) {
+		if (game[0][14] == 0) {
+			count += 1;
+		}
+		if (game[1][15] == 0) {
+			count += 1;
+		}
+		if (game[1][14] == 0) {
+			count += 1;
+		}
+		count = game[0][15]*100/count;
+		if (game[0][14] == 0) {
+			risk[0][14] += round(count);
+		}
+		if (game[1][15] == 0) {
+			risk[1][15] += round(count);
+		}
+		if (game[1][14] == 0) {
+			risk[1][14] += round(count);
+		}
+		count = 0;
+	}
+	if ((game[15][15] > 0) && (game[15][15] < 5)) {
+		if (game[15][14] == 0) {
+			count += 1;
+		}
+		if (game[14][15] == 0) {
+			count += 1;
+		}
+		if (game[14][14] == 0) {
+			count += 1;
+		}
+		count = game[15][15]*100/count;
+		if (game[15][14] == 0) {
+			risk[15][14] += round(count);
+		}
+		if (game[14][15] == 0) {
+			risk[14][15] += round(count);
+		}
+		if (game[14][14] == 0) {
+			risk[14][14] += round(count);
+		}
+		count = 0;
+	}  
+	
+	// Edge Cases
+	for (y = 1; y < 15; y++) {
+		if ((game[y][0] > 0) && (game[y][0] < 5)) {
+			if (game[y-1][0] == 0) {
+				count += 1;
+			}
+			if (game[y-1][1] == 0) {
+				count += 1;
+			}
+			if (game[y][1] == 0) {
+				count += 1;
+			}
+			if (game[y+1][1] == 0) {
+				count += 1;
+			}
+			if (game[y+1][0] == 0) {
+				count += 1;
+			}
+			count = game[y][0]*100/count;
+			if (game[y-1][0] == 0) {
+				risk[y-1][0] += round(count);
+			}
+			if (game[y-1][1] == 0) {
+				risk[y-1][1] += round(count);
+			}
+			if (game[y][1] == 0) {
+				risk[y][1] += round(count);
+			}
+			if (game[y+1][1] == 0) {
+				risk[y+1][1] += round(count);
+			}
+			if (game[y+1][0] == 0) {
+				risk[y+1][0] += round(count);
+			}
+			count = 0;
+		}
+	}
+
+	for (y = 1; y < 15; y++) {
+		if ((game[y][15] > 0) && (game[y][15] < 5)) {
+			if (game[y-1][15] == 0) {
+				count += 1;
+			}
+			if (game[y-1][14] == 0) {
+				count += 1;
+			}
+			if (game[y][14] == 0) {
+				count += 1;
+			}
+			if (game[y+1][14] == 0) {
+				count += 1;
+			}
+			if (game[y+1][15] == 0) {
+				count += 1;
+			}
+			count = game[y][15]*100/count;
+			if (game[y-1][15] == 0) {
+				risk[y-1][15] += round(count);
+			}
+			if (game[y-1][14] == 0) {
+				risk[y-1][14] += round(count);
+			}
+			if (game[y][14] == 0) {
+				risk[y][14] += round(count);
+			}
+			if (game[y+1][14] == 0) {
+				risk[y+1][14] += round(count);
+			}
+			if (game[y+1][15] == 0) {
+				risk[y+1][15] += round(count);
+			}
+			count = 0;
+		}
+	}
+
+	for (x = 1; x < 15; x++) {
+		if ((game[0][x] > 0) && (game[0][x] < 5)) {
+			if (game[0][x-1] == 0) {
+				count += 1;
+			}
+			if (game[1][x-1] == 0) {
+				count += 1;
+			}
+			if (game[1][x] == 0) {
+				count += 1;
+			}
+			if (game[1][x+1] == 0) {
+				count += 1;
+			}
+			if (game[0][x+1] == 0) {
+				count += 1;
+			}
+			count = game[0][x]*100/count;
+			if (game[0][x-1] == 0) {
+				risk[0][x-1] += round(count);
+			}
+			if (game[1][x-1] == 0) {
+				risk[1][x-1] += round(count);
+			}
+			if (game[1][x] == 0) {
+				risk[1][x] += round(count);
+			}
+			if (game[1][x+1] == 0) {
+				risk[1][x+1] += round(count);
+			}
+			if (game[0][x+1] == 0) {
+				risk[0][x+1] += round(count);
+			}
+			count = 0;
+		}
+	}
+
+	for (x = 1; x < 15; x++) {
+		if ((game[15][x] > 0) && (game[15][x] < 5)) {
+			if (game[15][x-1] == 0) {
+				count += 1;
+			}
+			if (game[14][x-1] == 0) {
+				count += 1;
+			}
+			if (game[14][x] == 0) {
+				count += 1;
+			}
+			if (game[14][x+1] == 0) {
+				count += 1;
+			}
+			if (game[15][x+1] == 0) {
+				count += 1;
+			}
+			count = game[15][x]*100/count;
+			if (game[15][x-1] == 0) {
+				risk[15][x-1] += round(count);
+			}
+			if (game[14][x-1] == 0) {
+				risk[14][x-1] += round(count);
+			}
+			if (game[14][x] == 0) {
+				risk[14][x] += round(count);
+			}
+			if (game[14][x+1] == 0) {
+				risk[14][x+1] += round(count);
+			}
+			if (game[15][x+1] == 0) {
+				risk[15][x+1] += round(count);
+			}
+			count = 0;
+		}
+	}
+
+	// Normal Cases
+	for (x = 1; x < 15; x++) {
+		for (y = 1; y < 15; y++) {
+			if ((game[y][x] > 0) && (game[y][x] < 5)) {
+				if (game[y-1][x-1] == 0) {
+					count += 1;
+				}
+				if (game[y-1][x] == 0) {
+					count += 1;
+				}
+				if (game[y-1][x+1] == 0) {
+					count += 1;
+				}
+				if (game[y+1][x-1] == 0) {
+					count += 1;
+				}
+				if (game[y+1][x] == 0) {
+					count += 1;
+				}
+				if (game[y+1][x+1] == 0) {
+					count += 1;
+				}
+				if (game[y][x-1] == 0) {
+					count += 1;
+				}
+				if (game[y][x+1] == 0) {
+					count += 1;
+				}
+				count = game[y][x]*100/count;
+				if (game[y-1][x-1] == 0) {
+					risk[y-1][x-1] += round(count);
+				}
+				if (game[y-1][x] == 0) {
+					risk[y-1][x] += round(count);
+				}
+				if (game[y-1][x+1] == 0) {
+					risk[y-1][x+1] += round(count);
+				}
+				if (game[y+1][x-1] == 0) {
+					risk[y+1][x-1] += round(count);
+				}
+				if (game[y+1][x] == 0) {
+					risk[y+1][x] += round(count);
+				}
+				if (game[y+1][x+1] == 0) {
+					risk[y+1][x+1] += round(count);
+				}
+				if (game[y][x-1] == 0) {
+					risk[y][x-1] += round(count);
+				}
+				if (game[y][x+1] == 0) {
+					risk[y][x+1] += round(count);
+				}
+			}
+		}
+	}
+
+	double max = 1;
+	for (x = 0; x < 16; x++) {
+		for (y = 0; y < 16; y++) {
+			if (risk[y][x] > max) {
+				max = risk[y][x];
+			}
+		}
+	}
+
+	cout << "Max Value: " << max << endl;
+
+	for (x = 0; x < 16; x++) {
+		for (y = 0; y < 16; y++) {
+			risk[y][x] = risk[y][x]/max;
+			risk[y][x] = round(risk[y][x]*100);
+		}
+	}
+}
+
+
+// Processes the current gamestate grid[][] and determines risk[][] probabilities
+static void calculateRiskOld(double game[][16]) {
 	int x, y;
 	// Corner Cases
 	if (game[0][0] != 0) {
 		risk[0][0] = 0;
 	} else {
 		risk[0][0] = game[1][0] + game[0][1] + game[1][1];
-		risk[0][0] = (risk[0][0]/12)*70 + 30;
+		risk[0][0] = (risk[0][0]/12)*100 + 0;
 		risk[0][0] = round(risk[0][0]);
 	}
 	if (game[0][15] != 0) {
 		risk[0][15] = 0;
 	} else {
 		risk[0][15] = game[1][15] + game[0][14] + game[1][14];
-		risk[0][15] = (risk[0][15]/12)*70 + 30;
+		risk[0][15] = (risk[0][15]/12)*100 + 0;
 		risk[0][15] = round(risk[0][15]);
 	}
 	if (game[15][0] != 0) {
 		risk[15][0] = 0;
 	} else {
 		risk[15][0] = game[15][1] + game[14][0] + game[14][1];
-		risk[15][0] = (risk[15][0]/12)*70 + 30;
+		risk[15][0] = (risk[15][0]/12)*100 + 0;
 		risk[15][0] = round(risk[15][0]);  
 	}
 	if (game[15][15] != 0) {
 		risk[15][15] = 0;
 	} else {
 		risk[15][15] = game[15][14] + game[14][15] + game[14][14];
-		risk[15][15] = (risk[15][15]/12)*70 + 30;
+		risk[15][15] = (risk[15][15]/12)*100 + 0;
 		risk[15][15] = round(risk[15][15]); 
 	}
 	
@@ -172,7 +494,7 @@ static void calculateRisk(double game[][16]) {
 			risk[y][0] = 0;
 		} else {
 			risk[y][0] = game[y-1][0] + game[y-1][1] + game[y][1] + game[y+1][1] + game[y+1][0];
-			risk[y][0] = (risk[y][0]/20)*70 + 30;
+			risk[y][0] = (risk[y][0]/20)*100 + 0;
 			risk[y][0] = round(risk[y][0]); 
 		}
 	}
@@ -182,7 +504,7 @@ static void calculateRisk(double game[][16]) {
 			risk[y][15] = 0;
 		} else {
 			risk[y][15] = game[y-1][15] + game[y-1][14] + game[y][14] + game[y+1][14] + game[y+1][15];
-			risk[y][15] = (risk[y][15]/20)*70 + 30;
+			risk[y][15] = (risk[y][15]/20)*100 + 0;
 			risk[y][15] = round(risk[y][15]); 
 		}
 	}
@@ -192,7 +514,7 @@ static void calculateRisk(double game[][16]) {
 			risk[0][x] = 0;
 		} else {
 			risk[0][x] = game[0][x-1] + game[1][x-1] + game[1][x] + game[1][x+1] + game[0][x+1];
-			risk[0][x] = (risk[0][x]/20)*70 + 30;
+			risk[0][x] = (risk[0][x]/20)*100 + 0;
 			risk[0][x] = round(risk[0][x]); 
 		}
 	}
@@ -202,7 +524,7 @@ static void calculateRisk(double game[][16]) {
 			risk[15][x] = 0;
 		} else {
 			risk[15][x] = game[15][x-1] + game[14][x-1] + game[14][x] + game[14][x+1] + game[15][x+1];
-			risk[15][x] = (risk[15][x]/20)*70 + 30;
+			risk[15][x] = (risk[15][x]/20)*100 + 0;
 			risk[15][x] = round(risk[15][x]); 
 		}
 	}
@@ -216,7 +538,7 @@ static void calculateRisk(double game[][16]) {
 				risk[y][x] = game[y-1][x-1] + game[y-1][x] + game[y-1][x+1];
 				risk[y][x] += game[y+1][x-1] + game[y+1][x] + game[y+1][x+1];
 				risk[y][x] += game[y][x-1] + game[y][x+1];
-				risk[y][x] = (risk[y][x]/32)*70 + 30;
+				risk[y][x] = (risk[y][x]/32)*100 + 0;
 				risk[y][x] = round(risk[y][x]); 
 			}
 		}
@@ -237,6 +559,8 @@ static void makeText(double heatmap[][16]) {
 		}
 	}
 	myfile.close();
+	// Move File to Actuator Program Current Directory
+	system("mv ~/Downloads/opencv-2.4.13/samples/cpp/hardcode.txt ~/Research/mindsweeper/cursorPosition/");
 
 	for (k = 0; k < 16; k++) {
 		for (l = 0; l < 16; l++) {
@@ -317,8 +641,8 @@ int main(int /*argc*/, char** /*argv*/) {
 		
 		// Process the grid[][] game state to produce probality heatmap in risk[][]
 		calculateRisk(grid);
-		cout << "CURRENT GAME STATE:" << endl;		
-		makeText(grid);
+		//cout << "CURRENT GAME STATE:" << endl;		
+		//makeText(grid);
 		cout << "\n" << "CURRENT HEATMAP:" << endl;
 		makeText(risk);
 	}
