@@ -16,6 +16,7 @@
 
 @interface Positions : NSObject
 @property NSTimer *timer;
+@property NSString *path;
 -(id)init;
 -(void)onTick:(NSTimer *)aTimer;
 @end
@@ -25,14 +26,50 @@
     id newInstance = [super init];
     if (newInstance) {
         NSLog(@"Creating timer...");
+        _path = @"/Users/Tomasero/Documents/Fall16/research/mindSweeper/";
         _timer = [NSTimer
-                    scheduledTimerWithTimeInterval:1.0
+                    scheduledTimerWithTimeInterval:.1
                     target:self
                     selector:@selector(onTick:)
                     userInfo:nil
                     repeats:YES];
     }
     return newInstance;
+}
+
+-(void)onTick:(NSTimer *)timer {
+    [self readFile]; //may have to change it after mouse click but add delay
+    NSDictionary *windowPos = [self getWindowPosition];
+    NSDictionary *cursorPos = [self getCursorPosition];
+    //    NSLog(@"%@", windowPos);
+    //    NSLog(@"%@", cursorPos);
+    if (windowPos) {
+        [self printRelPos:windowPos cursor:cursorPos];
+        [self getHeatMap];
+    } else {
+        NSLog(@"Open Minesweeper!");
+    }
+}
+
+-(void)getHeatMap {
+    BOOL click = [self mouseClicked];
+    NSLog(@"Click: %@", click ? @"Yes" : @"No");
+    if (!click) return;
+    NSString *cmd = [NSString stringWithFormat:@"open %@hardcoded/hardcodedgame.png", _path];
+    system([cmd UTF8String]);
+}
+
+-(void)onClickTick:(NSTimer *)timer {
+    BOOL click = [self mouseClicked];
+    NSLog(@"Click: %@", click ? @"Yes" : @"No");
+}
+
+-(BOOL)mouseClicked {
+    NSUInteger mouseButtonMask = [NSEvent pressedMouseButtons];
+    BOOL leftMouseButtonDown = (mouseButtonMask & (1 << 0)) != 0;
+    //    BOOL rightMouseButtonDown = (mouseButtonMask & (1 << 1)) != 0;
+    return leftMouseButtonDown;
+    
 }
 
 -(NSDictionary *)getWindowPosition {
@@ -105,7 +142,6 @@
     int cellX = cursorX / 30;
     int cellY = cursorY / 30;
     
-//    NSLog(@"(%d, %d)", cellX, cellY);
     NSDictionary *cell = @{
         @"X": [NSNumber numberWithInt: cellX],
         @"Y": [NSNumber numberWithInt: cellY]
@@ -155,19 +191,6 @@
     }
 }
 
--(void)onTick:(NSTimer *)timer {
-    [self readFile];
-    NSDictionary *windowPos = [self getWindowPosition];
-    NSDictionary *cursorPos = [self getCursorPosition];
-//    NSLog(@"%@", windowPos);
-//    NSLog(@"%@", cursorPos);
-    if (windowPos) {
-        [self printRelPos:windowPos cursor:cursorPos];
-    } else {
-        NSLog(@"Open Minesweeper!");
-    }
-}
-
 - (void) openSerial {
     serialFileDescriptor = open(
         "/dev/cu.usbmodem1267101",
@@ -209,44 +232,15 @@
     }
 }
 
-//- (void) readFile {
-////    NSString *filepath = [[NSBundle mainBundle] pathForResource:@"hardcode" ofType:@"txt"];
-////    NSError *error;
-////    NSString *fileContents = [NSString stringWithContentsOfFile:filepath encoding:NSUTF8StringEncoding error:&error];
-//
-//    NSFileManager *filemgr;
-//    NSData *databuffer;
-//    
-//    filemgr = [NSFileManager defaultManager];
-//    
-//    databuffer = [filemgr contentsAtPath: @"hardcode.txt"];
-//    
-////    if (error)
-////        NSLog(@"Error reading file: %@", error.localizedDescription);
-//    
-//    // maybe for debugging...
-////    NSLog(@"contents: %@", fileContents);
-//    
-////    NSArray *listArray = [fileContents componentsSeparatedByString:@"\n"];
-//    NSString* fileContents = [NSString stringWithUTF8String:[databuffer bytes]];
-//    NSLog(@"%@", fileContents);
-//    NSArray *listArray = [fileContents componentsSeparatedByString:@"\n"];
-//    
-//    for (int i = 0; i < 16; i++) {
-//        for (int j = 0; j < 16; j++) {
-//            int idx = 16 * i + j;
-//            heatMap[j][i] = [(NSNumber *)[listArray objectAtIndex:idx] intValue];
-//        }
-//    }
-//}
 
 - (void) readFile {
     FILE *fp;
     long lSize;
     char *buffer;
-    
-    fp = fopen ( "/Users/cortensinger/Research/mindSweeper/cursorPosition/hardcode.txt" , "rb" );
-    if( !fp ) perror("/Users/cortensinger/Research/mindSweeper/cursorPosition/hardcode.txt"),exit(1);
+    NSString *cmd = [NSString stringWithFormat:@"%@cursorPosition/hardcode.txt", _path];
+    const char *cmdString = [cmd UTF8String];
+    fp = fopen (cmdString, "rb");
+    if( !fp ) perror(cmdString),exit(1);
     
     fseek( fp , 0L , SEEK_END);
     lSize = ftell( fp );
@@ -279,7 +273,10 @@
 @end
 
 
+
+
 int main() {
+//    self.userInteractionEnabled = YES;
     @autoreleasepool {
         Positions *posObj = [[Positions alloc] init];
 //        [posObj readFile];

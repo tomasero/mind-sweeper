@@ -11,6 +11,9 @@
 
 #endif /* main_h */
 
+@interface YourWindow : NSWindow <NSWindowDelegate> {}
+@end
+
 int serialFileDescriptor = -1;
 struct termios options;
 int heatMap[16][16];
