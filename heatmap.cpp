@@ -293,7 +293,7 @@ int main(int /*argc*/, char** /*argv*/) {
 		// Take a screenshot and move it into the current directory
 		system("osascript -l JavaScript -e 'Application(\"System Events\").keystroke(\"#\", {using: \"command down\"})'");
 		usleep(500000);
-		system("mv ~/Desktop/screenshots/grid.png ~/Downloads/opencv-2.4.13/samples/cpp/");
+		system("mv ~/Desktop/screenshots/grid.png ~/Documents/research/opencv-master/samples/cpp/");
 		usleep(1000000);
 		Mat image = imread("grid.png", 1);	
 

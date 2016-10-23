@@ -133,7 +133,7 @@
     int x = [cell[@"X"] intValue];
     int y = [cell[@"Y"] intValue];
     int danger = heatMap[x][y];
-//    NSLog(@"danger: %d", danger);
+    NSLog(@"danger: %d", danger);
     return danger;
 }
 
@@ -229,7 +229,7 @@
     
 //    NSArray *listArray = [fileContents componentsSeparatedByString:@"\n"];
     NSString* fileContents = [NSString stringWithUTF8String:[databuffer bytes]];
-    NSLog(@"%@", fileContents);
+//    NSLog(@"%@", fileContents);
     NSArray *listArray = [fileContents componentsSeparatedByString:@"\n"];
     
     for (int i = 0; i < 16; i++) {
