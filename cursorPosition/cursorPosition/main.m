@@ -16,7 +16,7 @@
 
 @interface Positions : NSObject
 @property NSTimer *timer;
-@property NSString *path;
+@property NSString *path, *path2;
 -(id)init;
 -(void)onTick:(NSTimer *)aTimer;
 @end
@@ -26,7 +26,8 @@
     id newInstance = [super init];
     if (newInstance) {
         NSLog(@"Creating timer...");
-        _path = @"/Users/Tomasero/Documents/Fall16/research/mindSweeper/";
+        _path = @"/Users/cortensinger/Research/mindSweeper/";
+        _path2 = @"/Users/cortensinger/Downloads/opencv-2.4.13/samples/cpp/";
         _timer = [NSTimer
                     scheduledTimerWithTimeInterval:.1
                     target:self
@@ -41,8 +42,8 @@
     [self readFile]; //may have to change it after mouse click but add delay
     NSDictionary *windowPos = [self getWindowPosition];
     NSDictionary *cursorPos = [self getCursorPosition];
-    //    NSLog(@"%@", windowPos);
-    //    NSLog(@"%@", cursorPos);
+    //NSLog(@"%@", windowPos);
+    //NSLog(@"%@", cursorPos);
     if (windowPos) {
         [self printRelPos:windowPos cursor:cursorPos];
         [self getHeatMap];
@@ -55,7 +56,7 @@
     BOOL click = [self mouseClicked];
     NSLog(@"Click: %@", click ? @"Yes" : @"No");
     if (!click) return;
-    NSString *cmd = [NSString stringWithFormat:@"open %@hardcoded/hardcodedgame.png", _path];
+    NSString *cmd = [NSString stringWithFormat:@"%@heatmap", _path2];
     system([cmd UTF8String]);
 }
 
@@ -191,7 +192,7 @@
     }
 }
 
-- (void) openSerial {
+- (int) openSerial {
     serialFileDescriptor = open(
         "/dev/cu.usbmodem1267101",
 //        "/dev/cu.usbmodem1451",
@@ -203,6 +204,7 @@
     if (serialFileDescriptor == -1)
     {
         printf("Error opening serial port");
+        return 0;
     }
     
     // block non-root users from using this port
@@ -219,7 +221,8 @@
     cfmakeraw(&options);
     
     // specify any arbitrary baud rate
-    ioctl(serialFileDescriptor, IOSSIOSPEED, B9600);
+    ioctl(serialFileDescriptor, IOSSIOSPEED, B19200);
+    return 1;
 }
 
 - (void) testArray {
@@ -276,13 +279,17 @@
 
 
 int main() {
-//    self.userInteractionEnabled = YES;
     @autoreleasepool {
         Positions *posObj = [[Positions alloc] init];
 //        [posObj readFile];
         serialFileDescriptor = -1;
-        [posObj openSerial];
-        [[NSRunLoop currentRunLoop] run];
+        int serial = [posObj openSerial];
+        if (serial) {
+            [[NSRunLoop currentRunLoop] run];
+        } else {
+            NSLog(@"Run again");
+        }
+        
     }
 
 
